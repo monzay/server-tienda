@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id Int @id @default(autoincrement())
+  rol Rols @default(USUARIO)
+  nombre String 
+  password String  
+  email String @unique 
+  telefono Int 
+  direcciones Direcciones[] @relation("UsuarioDirecciones") 
+  productos Productos[] @relation("UsuarioProductos")
+  ordenes Orden[]
+  carrito Carrito?
+}
+
+model Productos {
+  id Int @id @default(autoincrement())
+  nombre String 
+  descripcion String
+  precio Int 
+  img_url String 
+  usuarioId Int 
+  usuario Usuario @relation("UsuarioProductos", fields: [usuarioId], references: [id])
+  estado Estado_paquete @default(PREPARANDO)
+  categoria Categoria @relation("CategoriaProductos", fields: [categoriaId], references: [id])
+  categoriaId Int  
+  ordenes Orden[] @relation("OrdenProductos")
+  carritos Carrito[] @relation("CarritoProductos")
+}
+
+model Direcciones {
+  id Int @id @default(autoincrement())
+  pais String 
+  estado String
+  ciudad String 
+  calle String 
+  codigo_postal String
+  usuarioId Int 
+  usuario Usuario @relation("UsuarioDirecciones", fields: [usuarioId], references: [id])
+}
+
+model Categoria {
+  id Int @id @default(autoincrement())
+  nombre String @unique
+  productos Productos[] @relation("CategoriaProductos")
+}
+
+model Orden {
+  id Int @id @default(autoincrement())
+  usuarioId Int
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  productos Productos[] @relation("OrdenProductos")
+  fecha DateTime @default(now())
+  total Float
+  pago Pago?
+}
+
+model Carrito {
+  id Int @id @default(autoincrement())
+  usuarioId Int @unique
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  productos Productos[] @relation("CarritoProductos")
+}
+
+model Pago {
+  id Int @id @default(autoincrement())
+  ordenId Int @unique
+  orden Orden @relation(fields: [ordenId], references: [id])
+  metodo String
+  estado String
+  fecha DateTime @default(now())
+}
+
+enum Rols {
+  USUARIO 
+  ADMINISTRADOR 
+  SUPER_ADMINISTRADOR 
+}
+
+enum Estado_paquete {
+  PREPARANDO
+  EN_TRANSITO
+  ENTREGADO
+}
